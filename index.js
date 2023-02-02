@@ -1,65 +1,3 @@
-// const axios = require('axios');
-// const cheerio = require('cheerio');
-// const Excel = require('exceljs');
-
-// async function scrapeData(url) {
-//   const response = await axios.get(url);
-//   const $ = cheerio.load(response.data);
-
-//   console.log(response.data);
-
-//   const data = [];
-
-//     // separar pela div pai e depois cada div filha
-//     $('.sc-hlcmlc-4.gJAafV').each((i, el) => {
-//       const item = $(el).text().trim();
-//       const titulo = $(el).find('.sc-hlcmlc-15.NQNSX').text();
-//       const local = $(el).find('.sc-hlcmlc-1.gQklzn').text();
-//       const valor = $(el).find('.sc-hlcmlc-8.loCxKJ').text();
-//       const status = $(el).find('.sc-hlcmlc-7.bvfWap').text();
-//       data.push({
-//         titulo: titulo,
-//         local: local,
-//         valor: valor,
-//         status: status,
-//       });
-//     });
-
-//   return data;
-// }
-
-// async function writeToExcel(data) {
-//   const workbook = new Excel.Workbook();
-//   const worksheet = workbook.addWorksheet('Sheet1');
-
-//   worksheet.columns = [
-//     { header: 'Titulo', key: 'titulo', width: 20 },
-//     { header: 'Local', key: 'local', width: 20 },
-//     { header: 'Valor', key: 'valor', width: 20 },
-//     { header: 'Dados', key: 'dados', width: 20 },
-//   ];
-
-//   // fazer um forEach para adicionar os dados no excel e o primeiro parametro e o title o segundo o local e o terceiro o valor
-//     data.forEach((item) => {
-//     worksheet.addRow({
-//       titulo: item.title,
-//       local: item.location,
-//       valor: item.price,
-//     });
-//     });
-
-//   await workbook.xlsx.writeFile('data.xlsx');
-// }
-
-// async function main() {
-//   const data = await scrapeData('https://gregoimoveisprime.com.br/comprar-alugar/imoveis?sort=-created_at%2Cid&offset=1&limit=10&typeArea=total_area&floorComparision=equals');
-//   console.log(data);
-
-//   await writeToExcel(data);
-// }
-
-// main();
-
 const { Builder, By, Key, until } = require("selenium-webdriver");
 
 async function scrapeData() {
@@ -84,20 +22,20 @@ async function scrapeData() {
   for (const card of cards) {
     let info = {};
 
-    // await card.click();
+    // Get the information from the opened page
+    let title = await card.findElement(By.css(".sc-hlcmlc-15.NQNSX")).getText();
+    let url = await card
+    .findElement(By.css(".sc-y8ewrg-0.gDmoGr.sc-hlcmlc-5.bDPWoB"))
+    .getAttribute("href");
 
-    // Encontra o título do card
-    let title = await driver
-      .findElement(By.css(".sc-hlcmlc-15.NQNSX"))
-      .getText();
-    let url = await driver
-      .findElement(By.css(".sc-y8ewrg-0.gDmoGr.sc-hlcmlc-5.bDPWoB"))
-      .getAttribute("href");
 
     info.title = title;
     info.url = url;
 
+
     data.push(info);
+
+
   }
 
   // Fecha o driver do selenium
@@ -111,6 +49,10 @@ async function scrapeData() {
 scrapeData().then(async (data) => {
   let driver = await new Builder().forBrowser("chrome").build();
 
+  let data2 = [];
+
+  console.log(`data`,data);
+
   data.map(async (item) => {
     await driver.get(item.url);
 
@@ -118,11 +60,14 @@ scrapeData().then(async (data) => {
       .findElement(By.css(".sc-de9h1g-0.cAbJFe"))
       .getText();
 
-    console.log(title);
+
+    data2.push({
+      title: title,
+    });
+
     // implementa a função de pegar as informações
   });
 
-  console.log(data);
 });
 
 // const {Builder, By, Key, until} = require('selenium-webdriver');
