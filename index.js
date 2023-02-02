@@ -5,13 +5,12 @@
 // async function scrapeData(url) {
 //   const response = await axios.get(url);
 //   const $ = cheerio.load(response.data);
-  
-//   console.log(response.data);
 
+//   console.log(response.data);
 
 //   const data = [];
 
-//     // separar pela div pai e depois cada div filha 
+//     // separar pela div pai e depois cada div filha
 //     $('.sc-hlcmlc-4.gJAafV').each((i, el) => {
 //       const item = $(el).text().trim();
 //       const titulo = $(el).find('.sc-hlcmlc-15.NQNSX').text();
@@ -42,13 +41,13 @@
 
 //   // fazer um forEach para adicionar os dados no excel e o primeiro parametro e o title o segundo o local e o terceiro o valor
 //     data.forEach((item) => {
-//     worksheet.addRow({ 
+//     worksheet.addRow({
 //       titulo: item.title,
 //       local: item.location,
 //       valor: item.price,
 //     });
 //     });
-    
+
 //   await workbook.xlsx.writeFile('data.xlsx');
 // }
 
@@ -70,10 +69,14 @@ async function scrapeData() {
   let driver = await new Builder().forBrowser("chrome").build();
 
   // Navega até o site
-  await driver.get("https://gregoimoveisprime.com.br/comprar-alugar/imoveis?sort=-created_at%2Cid&offset=1&limit=10&typeArea=total_area&floorComparision=equals");
+  await driver.get(
+    "https://gregoimoveisprime.com.br/comprar-alugar/imoveis?sort=-created_at%2Cid&offset=1&limit=10&typeArea=total_area&floorComparision=equals"
+  );
 
   // Encontra todos os cards com informações
-  let cards = await driver.findElements(By.css(".src__Box-sc-1sbtrzs-0.sc-hlcmlc-0.jeFFeJ.CardProperty"));
+  let cards = await driver.findElements(
+    By.css(".src__Box-sc-1sbtrzs-0.sc-hlcmlc-0.jeFFeJ.CardProperty")
+  );
 
   //dar um click para abrir o card
   // await driver.findElement(By.css(".src__Box-sc-1sbtrzs-0.sc-hlcmlc-0.jeFFeJ.CardProperty")).click();
@@ -81,32 +84,46 @@ async function scrapeData() {
   for (const card of cards) {
     let info = {};
 
-    await card.click();
-
+    // await card.click();
 
     // Encontra o título do card
-    let title = await driver.findElement(By.css(".sc-1glmiii-0.dpwWkJ")).getText();
-    info.title = title;
+    let title = await driver
+      .findElement(By.css(".sc-hlcmlc-15.NQNSX"))
+      .getText();
+    let url = await driver
+      .findElement(By.css(".sc-y8ewrg-0.gDmoGr.sc-hlcmlc-5.bDPWoB"))
+      .getAttribute("href");
 
-    
+    info.title = title;
+    info.url = url;
 
     data.push(info);
   }
-
 
   // Fecha o driver do selenium
   await driver.quit();
 
   // Retorna os dados coletados
   return data;
-  
 }
 
 // Executa a função de scraping de dados
-scrapeData().then(data => {
+scrapeData().then(async (data) => {
+  let driver = await new Builder().forBrowser("chrome").build();
+
+  data.map(async (item) => {
+    await driver.get(item.url);
+
+    let title = await driver
+      .findElement(By.css(".sc-de9h1g-0.cAbJFe"))
+      .getText();
+
+    console.log(title);
+    // implementa a função de pegar as informações
+  });
+
   console.log(data);
 });
-
 
 // const {Builder, By, Key, until} = require('selenium-webdriver');
 // // const {readFromExcel, writeToExcel} = require('./excel-helper');
@@ -127,18 +144,16 @@ scrapeData().then(data => {
 //       let title = await driver.findElement(By.css('.sc-1glmiii-0.dpwWkJ')).getText();
 //       let price = await driver.findElement(By.css('.sc-1glmiii-0.cqPWBC')).getText();
 //       let location = await driver.findElement(By.css('.sc-1glmiii-0.dpwWkJ')).getText();
-      
+
 //       data.push({
 //         title: title,
 //         price: price,
 //         location: location,
 //       });
 
-
 //       // Write the information to the excel file
 //       // writeToExcel({title, price, location});
 
-      
 //       // Go back to the main page
 //       await driver.navigate().back();
 //     }

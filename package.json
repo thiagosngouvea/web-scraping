@@ -12,7 +12,9 @@
     "axios": "^1.2.6",
     "cheerio": "^1.0.0-rc.12",
     "exceljs": "^4.3.0",
-    "puppeteer": "^19.6.2",
+    "puppeteer": "^19.6.3",
+    "request": "^2.88.2",
+    "request-promise": "^4.2.6",
     "selenium-webdriver": "^4.8.0",
     "xlsx": "^0.18.5"
   }
