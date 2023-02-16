@@ -1,109 +1,42 @@
-const { Builder, By, Key, until } = require("selenium-webdriver");
+const puppeteer = require('puppeteer');
 
-async function scrapeData() {
-  let data = [];
+async function scrapePage() {
+  const browser = await puppeteer.launch();
+  const page = await browser.newPage();
+  await page.goto('https://gregoimoveisprime.com.br/comprar-alugar/imoveis?typeArea=total_area&floorComparision=equals&sort=-created_at%2Cid&offset=1&limit=10');
 
-  // Cria a instância do driver do selenium
-  let driver = await new Builder().forBrowser("chrome").build();
+  // esperar a nova página carregar
+  await page.waitForSelector('.src__Box-sc-1sbtrzs-0.sc-hlcmlc-0.jeFFeJ.CardProperty');
 
-  // Navega até o site
-  await driver.get(
-    "https://gregoimoveisprime.com.br/comprar-alugar/imoveis?sort=-created_at%2Cid&offset=1&limit=10&typeArea=total_area&floorComparision=equals"
-  );
+  const propertyLinks = await page.$$eval('.src__Box-sc-1sbtrzs-0.sc-hlcmlc-0.jeFFeJ.CardProperty', cards => {
+    return cards.map(card => card.querySelector('a').href);
+  });
 
-  // Encontra todos os cards com informações
-  let cards = await driver.findElements(
-    By.css(".src__Box-sc-1sbtrzs-0.sc-hlcmlc-0.jeFFeJ.CardProperty")
-  );
+  const data = [];
 
-  //dar um click para abrir o card
-  // await driver.findElement(By.css(".src__Box-sc-1sbtrzs-0.sc-hlcmlc-0.jeFFeJ.CardProperty")).click();
+  for (const link of propertyLinks) {
+    const newPage = await browser.newPage();
+    await newPage.goto(link, { waitUntil: 'networkidle2' });
 
-  for (const card of cards) {
-    let info = {};
+    await newPage.waitForSelector('.sc-1oa9ufk-1.cmAgWZ');
 
-    // Get the information from the opened page
-    let title = await card.findElement(By.css(".sc-hlcmlc-15.NQNSX")).getText();
-    let url = await card
-    .findElement(By.css(".sc-y8ewrg-0.gDmoGr.sc-hlcmlc-5.bDPWoB"))
-    .getAttribute("href");
+    const propertyData = await newPage.evaluate(() => {
+      const title = document.querySelector('.sc-de9h1g-0.cAbJFe').textContent.trim();
+      const price = document.querySelector('.sc-3hj0n0-0.kPSlSy').textContent.trim().replace(/\/\s/g, '');
 
 
-    info.title = title;
-    info.url = url;
+      // const area = document.querySelector('span[property="value"]').textContent.trim();
+      // const description = document.querySelector('p[property="description"]').textContent.trim();
 
+      return { title, priceWithoutCurrency };
+    });
 
-    data.push(info);
-
-
+    data.push(propertyData);
+    await newPage.close();
   }
 
-  // Fecha o driver do selenium
-  await driver.quit();
-
-  // Retorna os dados coletados
+  await browser.close();
   return data;
 }
 
-// Executa a função de scraping de dados
-scrapeData().then(async (data) => {
-  let driver = await new Builder().forBrowser("chrome").build();
-
-  let data2 = [];
-
-  console.log(`data`,data);
-
-  data.map(async (item) => {
-    await driver.get(item.url);
-
-    let title = await driver
-      .findElement(By.css(".sc-de9h1g-0.cAbJFe"))
-      .getText();
-
-
-    data2.push({
-      title: title,
-    });
-
-    // implementa a função de pegar as informações
-  });
-
-});
-
-// const {Builder, By, Key, until} = require('selenium-webdriver');
-// // const {readFromExcel, writeToExcel} = require('./excel-helper');
-
-// (async function example() {
-//   let driver = await new Builder().forBrowser('chrome').build();
-//   try {
-//     await driver.get('https://gregoimoveisprime.com.br/comprar-alugar/imoveis?sort=-created_at%2Cid&offset=1&limit=10&typeArea=total_area&floorComparision=equals');
-
-//     // Get all the cards and click on each one
-//     let cards = await driver.findElements(By.css('.src__Box-sc-1sbtrzs-0.sc-hlcmlc-0.gJlTtq.CardProperty'));
-
-//     let data = []
-//     for (let card of cards) {
-//       await card.click();
-
-//       // Get the information from the opened page
-//       let title = await driver.findElement(By.css('.sc-1glmiii-0.dpwWkJ')).getText();
-//       let price = await driver.findElement(By.css('.sc-1glmiii-0.cqPWBC')).getText();
-//       let location = await driver.findElement(By.css('.sc-1glmiii-0.dpwWkJ')).getText();
-
-//       data.push({
-//         title: title,
-//         price: price,
-//         location: location,
-//       });
-
-//       // Write the information to the excel file
-//       // writeToExcel({title, price, location});
-
-//       // Go back to the main page
-//       await driver.navigate().back();
-//     }
-//     console.log(data);
-//   } finally {
-//     await driver.quit();
-//   }
-// })();
+scrapePage().then(data => console.log(data));
