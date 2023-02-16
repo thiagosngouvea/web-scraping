@@ -1,4 +1,5 @@
 const puppeteer = require('puppeteer');
+const ExcelJS = require('exceljs');
 
 async function scrapePage() {
   const browser = await puppeteer.launch();
@@ -12,6 +13,16 @@ async function scrapePage() {
     return cards.map(card => card.querySelector('a').href);
   });
 
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet('Imóveis');
+
+  worksheet.columns = [
+    { header: 'Título', key: 'title', width: 30 },
+    { header: 'Preço', key: 'price', width: 15 },
+    { header: 'Status', key: 'status', width: 15 },
+    { header: 'Detalhes', key: 'detalhes', width: 30 },
+  ];
+
   const data = [];
 
   for (const link of propertyLinks) {
@@ -22,21 +33,29 @@ async function scrapePage() {
 
     const propertyData = await newPage.evaluate(() => {
       const title = document.querySelector('.sc-de9h1g-0.cAbJFe').textContent.trim();
-      const price = document.querySelector('.sc-3hj0n0-0.kPSlSy').textContent.trim().replace(/\/\s/g, '');
+      const price = document.querySelector('.sc-3hj0n0-0.kPSlSy').textContent.trim().replace(/\/\s/g, '').replace(/VENDA|ALUGUEL/g, '').replace(/\s/g, '');
+      const status = document.querySelector('.sc-1lj1a6-0.fgUzYm').textContent.trim().replace(/\/\s/g, '').replace(/\s/g, '');
 
+      const detalhesDiv = document.querySelector('.sc-1alta1m-1.ecpoTK');
+      const detalhesSpans = detalhesDiv.querySelectorAll('span');
+      const detalhes = Array.from(detalhesSpans).map(span => span.textContent.trim()).join(', ');
+      
+      const detalhesDiv2 = document.querySelector('.sc-pxw7bz-0.ktssSw.Body');
+      const detalhesSpans2 = detalhesDiv2.querySelectorAll('span');
+      const detalhes2 = Array.from(detalhesSpans2).map(span => span.textContent.trim()).join(', ');
+    
 
-      // const area = document.querySelector('span[property="value"]').textContent.trim();
-      // const description = document.querySelector('p[property="description"]').textContent.trim();
-
-      return { title, priceWithoutCurrency };
+      return { title, price, status, detalhes, detalhes2 };
     });
 
+    worksheet.addRow(propertyData);
     data.push(propertyData);
     await newPage.close();
   }
 
+  await workbook.xlsx.writeFile('imoveis.xlsx');
   await browser.close();
   return data;
 }
 
-scrapePage().then(data => console.log(data));
+scrapePage().then(data => console.log(data, data.length));
