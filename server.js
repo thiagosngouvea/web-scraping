@@ -9,6 +9,11 @@ app.use(cors());
 const scrapePage = require('./scraping');
 const scrapePageOlx = require('./scraping-olx');
 
+app.get('/', (req, res) => {
+    res.send('Hello World!');
+});
+
+
 app.get('/api/scrape', async (req, res) => {
   try {
     const data = await scrapePage();
