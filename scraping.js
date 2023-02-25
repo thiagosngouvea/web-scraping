@@ -3,7 +3,7 @@ const puppeteer = require('puppeteer');
 async function scrapePage() {
     const browser = await puppeteer.launch();
     const page = await browser.newPage();
-    await page.goto('https://gregoimoveisprime.com.br/comprar-alugar/imoveis?typeArea=total_area&floorComparision=equals&sort=-created_at%2Cid&offset=1&limit=1');
+    await page.goto('https://gregoimoveisprime.com.br/comprar-alugar/imoveis?typeArea=total_area&floorComparision=equals&sort=-created_at%2Cid&offset=1&limit=1000');
   
     // esperar a nova página carregar
     await page.waitForSelector('.src__Box-sc-1sbtrzs-0.sc-hlcmlc-0.jeFFeJ.CardProperty');
