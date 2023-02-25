@@ -2,6 +2,8 @@ const puppeteer = require('puppeteer');
 const ExcelJS = require('exceljs');
 
 async function scrapePage() {
+
+  console.log('Iniciando o scraping');
     const browser = await puppeteer.launch();
     const page = await browser.newPage();
     await page.goto('https://gregoimoveisprime.com.br/comprar-alugar/imoveis?typeArea=total_area&floorComparision=equals&sort=-created_at%2Cid&offset=1&limit=10');
@@ -65,6 +67,7 @@ async function scrapePage() {
   
     await workbook.xlsx.writeFile('imoveis.xlsx');
     await browser.close();
+    console.log('Done scraping', data);
     return data;
   }
 
