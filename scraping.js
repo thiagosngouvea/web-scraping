@@ -32,6 +32,16 @@ async function scrapePage() {
       await newPage.goto(link, { waitUntil: 'networkidle2' });
   
       await newPage.waitForSelector('.sc-1oa9ufk-1.cmAgWZ');
+
+      await newPage.click('.sc-1rjjx2i-4.dcoDlK.WrapperImage');
+
+      await newPage.waitForSelector('.sc-2l0skt-0.kUoFVh.sc-1aidao9-4.eSzcnE');
+
+      await newPage.click('.sc-2l0skt-0.kUoFVh.sc-1aidao9-4.eSzcnE');
+
+      await newPage.waitForSelector('.sc-q0jucq-2.kOoUSa');
+
+      await newPage.click('.sc-q0jucq-2.kOoUSa');
   
       const propertyData = await newPage.evaluate(async () => {
         const title = document.querySelector('.sc-de9h1g-0.cAbJFe').textContent.trim();
@@ -53,10 +63,12 @@ async function scrapePage() {
           details[sectionTitle] = sectionData;
         }
 
-        //pegar o link da imagem
-        // const image = document.querySelector('.sc-1alta1m-0.kqZQZ').src;
+        const imagens = document.querySelectorAll('.sc-2l0skt-0.kUoFVh');
+
+        const images = Array.from(imagens).map(img => img.src);
+
         
-        return { title, price, status, detalhes, details};
+        return { title, price, status, detalhes, details, images};
         
       });
   

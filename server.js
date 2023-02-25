@@ -47,32 +47,45 @@ app.get('/api/scrape', async (req, res) => {
           await newPage.goto(link, { waitUntil: 'networkidle2' });
       
           await newPage.waitForSelector('.sc-1oa9ufk-1.cmAgWZ');
+
+          await newPage.waitForSelector('.sc-1rjjx2i-7.daJRUc');
+
+          await newPage.click('.sc-1rjjx2i-7.daJRUc');
+
+          await newPage.waitForSelector('.ReactModal__Content.ReactModal__Content--after-open');
+
+          console.log('Aguardando 5 segundos...');
       
           const propertyData = await newPage.evaluate(async () => {
             const title = document.querySelector('.sc-de9h1g-0.cAbJFe').textContent.trim();
-            // const price = document.querySelector('.sc-3hj0n0-0.kPSlSy').textContent.trim().replace(/\/\s/g, '').replace(/VENDA|ALUGUEL/g, '').replace(/\s/g, '');
-            // const status = document.querySelector('.sc-1lj1a6-0.fgUzYm').textContent.trim().replace(/\/\s/g, '').replace(/\s/g, '');
-      
-            // const detalhesDiv = document.querySelector('.sc-1alta1m-1.ecpoTK');
-            // const detalhesSpans = detalhesDiv.querySelectorAll('span');
-            // const detalhes = Array.from(detalhesSpans).map(span => span.textContent.trim()).join(', ');
+            const price = (document.querySelector('.sc-3hj0n0-0.kPSlSy') ?? document.querySelector('.sc-3hj0n0-0.bqODGa')).textContent.trim().replace(/\/\s/g, '').replace(/VENDA|ALUGUEL/g, '').replace(/\s/g, '');
+            const status = document.querySelector('.sc-1lj1a6-0.fgUzYm').textContent.trim().replace(/\/\s/g, '').replace(/\s/g, '');
     
-            // const detailsSections = document.querySelectorAll('.sc-1gfn7xh-0.fxLMbR');
+            const detailsSections = document.querySelectorAll('.sc-1gfn7xh-0.fxLMbR');
      
-            // const details = {};
+            const details = {};
     
-            // for (const section of detailsSections) {
-            //   const sectionTitle = section.querySelector('h3').textContent.trim();
-            //   const sectionSpans = section.querySelectorAll('span');
-            //   const sectionData = Array.from(sectionSpans).map(span => span.textContent.trim()).join(', ');
-            //   details[sectionTitle] = sectionData;
-            // }
-    
-            //pegar o link da imagem
-            // const image = document.querySelector('.sc-1alta1m-0.kqZQZ').src;
+            for (const section of detailsSections) {
+              const sectionTitle = section.querySelector('h3').textContent.trim();
+              const sectionSpans = section.querySelectorAll('span');
+              const sectionData = Array.from(sectionSpans).map(span => span.textContent.trim()).join(', ');
+              details[sectionTitle] = sectionData;
+            }
+
+            const fichaSection = document.querySelectorAll('.sc-vhku1u-0.hzRhgA');
+
+            const ficha = {};
+
+            for (const section of fichaSection) {
+              const sectionTitle = section.querySelector('h3').textContent.trim();
+              const sectionSpans = section.querySelectorAll('span');
+              const sectionData = Array.from(sectionSpans).map(span => span.textContent.trim()).join(', ');
+              ficha[sectionTitle] = sectionData;
+            }
+
+            details['Ficha'] = ficha;
             
-            //, price, status, detalhes, details
-            return { title };
+            return { title, price, status, details };
             
           });
       
@@ -101,6 +114,6 @@ app.get('/api/scrape-olx', async (req, res) => {
   }
 });
 
-app.listen(8080, () => {
-  console.log('Server listening on port 8080');
+app.listen(3000, () => {
+  console.log('Server listening on port 3000');
 });

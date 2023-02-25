@@ -52,10 +52,17 @@ async function scrapePageOlx() {
 
         const price = document.querySelector('.ad__sc-1wimjbb-1.hoHpcC.sc-cooIXK.cXlgiS').textContent.trim();
         
-        
+
+        const titleAll = document.querySelectorAll('.sc-bwzfXH.ad__h3us20-0.ikHgMx')
+
+        const details = {}
+
+        for (const titleDt of titleAll) {
+          console.log(titleDt.textContent.trim())
+        }
 
         
-        return { title, price };
+        return { title, price, details };
       });
   
       worksheet.addRow(propertyData);
