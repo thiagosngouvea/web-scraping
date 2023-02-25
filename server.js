@@ -1,5 +1,6 @@
 const express = require('express');
 const puppeteer = require('puppeteer');
+const chromium = require('chromium');
 const ExcelJS = require('exceljs');
 const bodyParser = require('body-parser');
 const cors = require('cors');
@@ -19,7 +20,8 @@ app.get('/', (req, res) => {
 app.get('/api/scrape', async (req, res) => {
   try {
     puppeteer.launch({
-        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+        executablePath: chromium.executablePath,
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
     }).then(async function (browser) {
         const page = await browser.newPage();
         await page.goto('https://gregoimoveisprime.com.br/comprar-alugar/imoveis?typeArea=total_area&floorComparision=equals&sort=-created_at%2Cid&offset=1&limit=10');
