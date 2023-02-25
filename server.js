@@ -47,14 +47,6 @@ app.get('/api/scrape', async (req, res) => {
           await newPage.goto(link, { waitUntil: 'networkidle2' });
       
           await newPage.waitForSelector('.sc-1oa9ufk-1.cmAgWZ');
-
-          await newPage.waitForSelector('.sc-1rjjx2i-7.daJRUc');
-
-          await newPage.click('.sc-1rjjx2i-7.daJRUc');
-
-          await newPage.waitForSelector('.ReactModal__Content.ReactModal__Content--after-open');
-
-          console.log('Aguardando 5 segundos...');
       
           const propertyData = await newPage.evaluate(async () => {
             const title = document.querySelector('.sc-de9h1g-0.cAbJFe').textContent.trim();
