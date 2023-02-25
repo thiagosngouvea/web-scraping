@@ -19,10 +19,7 @@ app.get('/', (req, res) => {
 
 app.get('/api/scrape', async (req, res) => {
   try {
-    puppeteer.launch({
-        executablePath: chromium.executablePath,
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
-    }).then(async function (browser) {
+    puppeteer.launch().then(async function (browser) {
         const page = await browser.newPage();
         await page.goto('https://gregoimoveisprime.com.br/comprar-alugar/imoveis?typeArea=total_area&floorComparision=equals&sort=-created_at%2Cid&offset=1&limit=10');
       
@@ -53,28 +50,29 @@ app.get('/api/scrape', async (req, res) => {
       
           const propertyData = await newPage.evaluate(async () => {
             const title = document.querySelector('.sc-de9h1g-0.cAbJFe').textContent.trim();
-            const price = document.querySelector('.sc-3hj0n0-0.kPSlSy').textContent.trim().replace(/\/\s/g, '').replace(/VENDA|ALUGUEL/g, '').replace(/\s/g, '');
-            const status = document.querySelector('.sc-1lj1a6-0.fgUzYm').textContent.trim().replace(/\/\s/g, '').replace(/\s/g, '');
+            // const price = document.querySelector('.sc-3hj0n0-0.kPSlSy').textContent.trim().replace(/\/\s/g, '').replace(/VENDA|ALUGUEL/g, '').replace(/\s/g, '');
+            // const status = document.querySelector('.sc-1lj1a6-0.fgUzYm').textContent.trim().replace(/\/\s/g, '').replace(/\s/g, '');
       
-            const detalhesDiv = document.querySelector('.sc-1alta1m-1.ecpoTK');
-            const detalhesSpans = detalhesDiv.querySelectorAll('span');
-            const detalhes = Array.from(detalhesSpans).map(span => span.textContent.trim()).join(', ');
+            // const detalhesDiv = document.querySelector('.sc-1alta1m-1.ecpoTK');
+            // const detalhesSpans = detalhesDiv.querySelectorAll('span');
+            // const detalhes = Array.from(detalhesSpans).map(span => span.textContent.trim()).join(', ');
     
-            const detailsSections = document.querySelectorAll('.sc-1gfn7xh-0.fxLMbR');
+            // const detailsSections = document.querySelectorAll('.sc-1gfn7xh-0.fxLMbR');
      
-            const details = {};
+            // const details = {};
     
-            for (const section of detailsSections) {
-              const sectionTitle = section.querySelector('h3').textContent.trim();
-              const sectionSpans = section.querySelectorAll('span');
-              const sectionData = Array.from(sectionSpans).map(span => span.textContent.trim()).join(', ');
-              details[sectionTitle] = sectionData;
-            }
+            // for (const section of detailsSections) {
+            //   const sectionTitle = section.querySelector('h3').textContent.trim();
+            //   const sectionSpans = section.querySelectorAll('span');
+            //   const sectionData = Array.from(sectionSpans).map(span => span.textContent.trim()).join(', ');
+            //   details[sectionTitle] = sectionData;
+            // }
     
             //pegar o link da imagem
             // const image = document.querySelector('.sc-1alta1m-0.kqZQZ').src;
             
-            return { title, price, status, detalhes, details};
+            //, price, status, detalhes, details
+            return { title };
             
           });
       
