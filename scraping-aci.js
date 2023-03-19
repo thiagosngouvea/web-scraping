@@ -42,8 +42,17 @@ async function scrapePageAci() {
         document.querySelectorAll('.table-col div').forEach(div => {
           propertyCharacteristics.push(div.textContent.trim());
         });
+
+        const imageLinks = [];
+
+        document.querySelectorAll('#photos-property-carousel li').forEach(li => {
+        const imageUrl = li.style.backgroundImage.match(/url\((.*?)\)/)[1].replace(/"/g, '');
+        const imageUrlWithoutMini = imageUrl.replace('/mini', '');
+        imageLinks.push(imageUrlWithoutMini);
+        });
+
   
-        return { title, description, informations, propertyCharacteristics };
+        return { title, description, informations, propertyCharacteristics, imageLinks };
         
       });
   
