@@ -3,7 +3,7 @@ const puppeteer = require('puppeteer');
 async function scrapePage() {
     const browser = await puppeteer.launch();
     const page = await browser.newPage();
-    await page.goto('https://gregoimoveisprime.com.br/comprar-alugar/imoveis?typeArea=total_area&floorComparision=equals&sort=-created_at%2Cid&offset=1&limit=1000');
+    await page.goto('https://gregoimoveisprime.com.br/comprar-alugar/imoveis?typeArea=total_area&floorComparision=equals&sort=-created_at%2Cid&offset=1&limit=5');
   
     // esperar a nova página carregar
     await page.waitForSelector('.src__Box-sc-1sbtrzs-0.sc-hlcmlc-0.jeFFeJ.CardProperty');
@@ -35,21 +35,27 @@ async function scrapePage() {
         const title = document.querySelector('.sc-de9h1g-0.cAbJFe').textContent.trim();
         const price = (document.querySelector('.sc-3hj0n0-0.kPSlSy') ?? document.querySelector('.sc-3hj0n0-0.bqODGa')).textContent.trim().replace(/\/\s/g, '').replace(/VENDA|ALUGUEL/g, '').replace(/\s/g, '');
         const status = document.querySelector('.sc-1lj1a6-0.fgUzYm').textContent.trim().replace(/\/\s/g, '').replace(/\s/g, '');
+        const url = window.location.href;
 
         const detailsSections = document.querySelectorAll('.sc-1gfn7xh-0.fxLMbR');
- 
+
+        //preciso pegar toda a tag html e não só o texto o span completo com todos os detalhes e escrever para mandar na api
         const details = {};
 
         for (const section of detailsSections) {
           let sectionTitle = section.querySelector('h3').textContent.trim();
-          sectionTitle = sectionTitle.replace(/\s+/g, '_');
-          sectionTitle = sectionTitle.replace(/[^\w\s]/gi, '');
-          sectionTitle = sectionTitle.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-          sectionTitle = sectionTitle.toLowerCase();
+          sectionTitle = sectionTitle.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "_");
           const sectionSpans = section.querySelectorAll('span');
           const sectionData = Array.from(sectionSpans).map(span => span.textContent.trim()).join(', ');
-          details[sectionTitle] = sectionData;
 
+          if (sectionTitle === 'descricao_do_imovel') {
+            const sectionHtml = Array.from(section.children).map(child => child.outerHTML);
+            details[sectionTitle] = sectionHtml.join(',\n');
+          } else {
+            details[sectionTitle] = sectionData;
+          }
+
+          details[sectionTitle] = sectionData;
         }
 
         const fichaSection = document.querySelectorAll('.sc-vhku1u-0.hzRhgA');
@@ -60,8 +66,14 @@ async function scrapePage() {
           const sectionTitle = section.querySelector('h3').textContent.trim();
           const sectionSpans = section.querySelectorAll('span');
           const sectionData = Array.from(sectionSpans).map(span => span.textContent.trim()).join(', ');
+
           ficha[sectionTitle] = sectionData;
         }
+
+        const fichaProprietario = document.querySelectorAll('section > h3 + .sc-vhku1u-0.hzRhgA');
+
+        const proprietario = {};
+        
 
         const imagens = document.querySelectorAll('.sc-q0jucq-5.tIXoK');
 
@@ -74,9 +86,69 @@ async function scrapePage() {
 
         details['Imagens'] = imagensArray;
 
+        //details.comodos separar por virgula e espaço, se depois do espaço tiver um 'sendo' não separa e passa pra proxima, colocar tudo dentro de um array 
 
+        const comodosArray = details['comodos']?.split(',');
+
+        const condominiosArray = details['condominio']?.split(',');
+
+        const proximidadesArray = details['proximidades']?.split(',');
+
+        //se tiver 'sendo' no comodo, junta com o anterior comodo
+
+        for (let i = 0; i < comodosArray?.length; i++) {
+          if (comodosArray[i].includes('sendo')) {
+            comodosArray[i - 1] = comodosArray[i - 1] + ', ' + comodosArray[i];
+            comodosArray.splice(i, 1);
+          }
+
+          if(comodosArray[i].charAt(0) === ' ') {
+            comodosArray[i] = comodosArray[i].substring(1);
+          }
+
+          if (comodosArray[i].charAt(comodosArray[i].length - 1) === ' ') {
+            comodosArray[i] = comodosArray[i].slice(0, -1);
+          }
+
+          if (comodosArray[i] === ""){
+            comodosArray.splice(i, 1);
+          }
+        }
+
+        for (let i = 0; i < condominiosArray?.length; i++) {
+
+          if (condominiosArray[i].charAt(0) === ' ') {
+            condominiosArray[i] = condominiosArray[i].substring(1);
+          }
+
+          if (condominiosArray[i].charAt(condominiosArray[i].length - 1) === ' ') {
+            condominiosArray[i] = condominiosArray[i].slice(0, -1);
+          }
+
+          if (condominiosArray[i] === ""){
+            condominiosArray.splice(i, 1);
+          }
+        }
+
+        for (let i = 0; i < proximidadesArray?.length; i++) {
+          if (proximidadesArray[i].charAt(0) === ' ') {
+            proximidadesArray[i] = proximidadesArray[i].substring(1);
+          }
+
+          if (proximidadesArray[i].charAt(proximidadesArray[i].length - 1) === ' ') {
+            proximidadesArray[i] = proximidadesArray[i].slice(0, -1);
+          }
+
+          if (proximidadesArray[i] === ""){
+            proximidadesArray.splice(i, 1);
+          }
+        }
+
+        details['comodos'] = comodosArray;
+        details['condominio'] = condominiosArray;
+        details['proximidades'] = proximidadesArray;
         
-        return { title, price, status, details };
+        return { title, price, status, details, url };
         
       });
   

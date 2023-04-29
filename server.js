@@ -12,6 +12,7 @@ app.use(cors());
 const scrapePage = require('./scraping');
 const scrapePageOlx = require('./scraping-olx');
 const scrapePageAci = require('./scraping-aci');
+const scrapePageOsvaldo = require('./scraping-osvaldo');
 
 app.get('/', (req, res) => {
     res.send('Hello World!');
@@ -47,6 +48,16 @@ app.get('/api/scrape-aci', async (req, res) => {
     console.error(error);
     res.status(500).send('Error scraping page');
   }
+});
+
+app.get('/api/scrape-osvaldo', async (req, res) => {
+  try {
+    const data = await scrapePageOsvaldo();
+    res.json(data);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send('Error scraping page');
+    }
 });
 
 app.listen(3000, () => {

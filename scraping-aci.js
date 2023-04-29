@@ -1,7 +1,11 @@
 const puppeteer = require('puppeteer');
 
 async function scrapePageAci() {
-    const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch(
+      {
+        headless: false,
+      }
+    );
     const page = await browser.newPage();
     await page.goto('https://www.acimoveiscaruaru.com.br/imobiliaria/imoveis/0/1');
   
