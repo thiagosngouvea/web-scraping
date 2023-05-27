@@ -10,6 +10,7 @@ app.use(bodyParser.json());
 app.use(cors());
 
 const scrapePage = require('./scraping');
+const scrapePageLinux = require('./scraping-linux');
 const scrapePageOlx = require('./scraping-olx');
 const scrapePageAci = require('./scraping-aci');
 const scrapePageOsvaldo = require('./scraping-osvaldo');
@@ -22,6 +23,17 @@ app.get('/', (req, res) => {
 app.get('/api/scrape', async (req, res) => {
   try {
     const data = await scrapePage();
+    res.send(data);
+    console.log(data)
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error scraping page');
+  }
+});
+
+app.get('/api/scrape-linux', async (req, res) => {
+  try {
+    const data = await scrapePageLinux();
     res.send(data);
     console.log(data)
   } catch (error) {

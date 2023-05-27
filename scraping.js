@@ -1,9 +1,13 @@
 const puppeteer = require('puppeteer');
+const cheerio = require('cheerio');
+const axios = require('axios');
 
 async function scrapePage() {
-    const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch({
+      headless: false,
+    });
     const page = await browser.newPage();
-    await page.goto('https://gregoimoveisprime.com.br/comprar-alugar/imoveis?typeArea=total_area&floorComparision=equals&sort=-created_at%2Cid&offset=1&limit=5');
+    await page.goto('https://gregoimoveisprime.com.br/comprar-alugar/imoveis?typeArea=total_area&floorComparision=equals&sort=-created_at%2Cid&offset=1&limit=1000');
   
     // esperar a nova página carregar
     await page.waitForSelector('.src__Box-sc-1sbtrzs-0.sc-hlcmlc-0.jeFFeJ.CardProperty');
@@ -20,16 +24,16 @@ async function scrapePage() {
 
       await newPage.setViewport({ width: 1920, height: 1080 });
   
-      await newPage.waitForSelector('.sc-1oa9ufk-1.cmAgWZ');
-      await newPage.waitForSelector('.sc-1rjjx2i-7.daJRUc');
-      await newPage.click('.sc-1rjjx2i-7.daJRUc');
+      await newPage.waitForSelector('.sc-138hwir-8.duDyhb');
+      await newPage.waitForSelector('.sc-e1j81b-1.jAXpzS');
+      await newPage.click('.sc-e1j81b-1.jAXpzS');
       await newPage.waitForTimeout(3000);
-      await newPage.waitForSelector('.sc-1aidao9-3.jFtNhU');
-      await newPage.waitForTimeout(1000);
-      await newPage.waitForSelector('.sc-q0jucq-2.kOoUSa');
-      await newPage.click('.sc-q0jucq-2.kOoUSa');
-      await newPage.waitForTimeout(2000);
-      await newPage.waitForSelector('.sc-q0jucq-4.gDuWtB');
+      // await newPage.waitForSelector('.sc-e1j81b-1.jAXpzS');
+      // await newPage.waitForTimeout(1000);
+      // await newPage.waitForSelector('.sc-e1j81b-1.jAXpzS');
+      // await newPage.click('.sc-e1j81b-1.jAXpzS');
+      // await newPage.waitForTimeout(2000);
+      // await newPage.waitForSelector('.sc-q0jucq-4.gDuWtB');
       
       const propertyData = await newPage.evaluate(async () => {
         const title = document.querySelector('.sc-de9h1g-0.cAbJFe').textContent.trim();
@@ -46,13 +50,21 @@ async function scrapePage() {
           let sectionTitle = section.querySelector('h3').textContent.trim();
           sectionTitle = sectionTitle.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "_");
           const sectionSpans = section.querySelectorAll('span');
-          const sectionData = Array.from(sectionSpans).map(span => span.textContent.trim()).join(', ');
+          let sectionData = Array.from(sectionSpans).map(span => span.textContent.trim()).join(', ');
 
-          if (sectionTitle === 'descricao_do_imovel') {
-            const sectionHtml = Array.from(section.children).map(child => child.outerHTML);
-            details[sectionTitle] = sectionHtml.join(',\n');
-          } else {
-            details[sectionTitle] = sectionData;
+          if (sectionTitle === 'localizacao') {
+            sectionData = sectionData.replace('+− LeafletPara aplicar o zoom no mapa, segure a tecla Ctrl', '');
+            sectionData = sectionData.replace('+, −,', '');
+            sectionData = sectionData.split(',').map(item => item.trim()).join(', ');
+
+            //se o primeiro item e o segundo item forem iguais, remove o segundo item
+            const sectionDataArray = sectionData.split(', ');
+            if (sectionDataArray[0] === sectionDataArray[1]) {
+              sectionDataArray.splice(1, 1);
+            }
+
+            sectionData = sectionDataArray.join(', ');
+
           }
 
           details[sectionTitle] = sectionData;
@@ -62,20 +74,23 @@ async function scrapePage() {
 
         const ficha = {};
 
+        //preciso pegar com o cheerio uma section com a classe .sc-vhku1u-0.hzRhgA , porem tem que ter um h3
+
+
         for (const section of fichaSection) {
           const sectionTitle = section.querySelector('h3').textContent.trim();
           const sectionSpans = section.querySelectorAll('span');
           const sectionData = Array.from(sectionSpans).map(span => span.textContent.trim()).join(', ');
 
           ficha[sectionTitle] = sectionData;
-        }
+        }        
 
-        const fichaProprietario = document.querySelectorAll('section > h3 + .sc-vhku1u-0.hzRhgA');
+        const section = document.querySelector('.sc-1gfn7xh-0.fxLMbR');
+        const pTags = Array.from(section.getElementsByTagName('p'));
 
-        const proprietario = {};
-        
+        const pArray = pTags.map(tag => tag.innerHTML);
 
-        const imagens = document.querySelectorAll('.sc-q0jucq-5.tIXoK');
+        const imagens = document.querySelectorAll('.sc-q0jucq-5.ggaTVx');
 
         const imagensArray = [];
 
@@ -84,7 +99,7 @@ async function scrapePage() {
           imagensArray.push(imagemUrl);
         }
 
-        details['Imagens'] = imagensArray;
+        details['imagens'] = imagensArray;
 
         //details.comodos separar por virgula e espaço, se depois do espaço tiver um 'sendo' não separa e passa pra proxima, colocar tudo dentro de um array 
 
